@@ -1,0 +1,15 @@
+# WhatsApp Baileys session credentials and runtime databases
+data/
+data/*
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+
+# QR codes
+whatsapp-qr.png
+*.png
+
+# Environment secrets
+.env
+.env.*
+!.env.example

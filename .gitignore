@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.env
+*.env.*
+!*.env.example
+
+# OpenWA and WhatsApp session storage (contains private keys & SQLite databases)
+openwa/data/
+openwa/data/*
+.whatsapp-session/
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+
+# Database backups
+backups/
+mongodb-backups/
+
+# Build and test outputs
+dist/
+build/
+coverage/
+*.log
+
+# Scratch and temporary directories
+scratch/
+tmp/
+temp/

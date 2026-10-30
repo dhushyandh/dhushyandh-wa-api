@@ -1,0 +1,75 @@
+name: dhushyandh-ai
+services:
+  openwa:
+    image: openwa-openwa:latest
+    container_name: dhushyandh-ai-openwa
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+      - SETGID
+      - SETUID
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    mem_limit: 1g
+    pids_limit: 512
+
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${API_PORT:-2786}:2785"
+
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      TZ: Asia/Kolkata
+      PORT: "2785"
+
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp/.config
+      XDG_CACHE_HOME: /tmp/.cache
+
+      LOG_LEVEL: info
+      AUTO_START_SESSIONS: "true"
+
+      DATABASE_TYPE: sqlite
+      ENGINE_TYPE: ${ENGINE_TYPE:-baileys}
+
+      BAILEYS_AUTH_DIR: /app/data/baileys
+
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: /app/data/media
+      PLUGINS_DIR: /app/data/plugins
+
+      API_MASTER_KEY: ${API_MASTER_KEY:?API_MASTER_KEY is required}
+
+      CORS_ORIGINS: http://localhost:2786,http://127.0.0.1:2786
+      CSP_UPGRADE_INSECURE_REQUESTS: "false"
+      SSRF_ALLOWED_HOSTS: host.docker.internal
+
+    volumes:
+      - ./data:/app/data
+
+    restart: unless-stopped
+
+    stop_grace_period: 75s
+
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:2785/api/health/ready
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

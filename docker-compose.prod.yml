@@ -1,0 +1,166 @@
+# =============================================================================
+# DHUSHYANDH AI — Production Docker Compose Configuration
+# Services: dhushyandh-ai-api, dhushyandh-ai-openwa
+# Security: Loopback isolation, non-root users, resource constraints, internal bridge
+# =============================================================================
+
+name: dhushyandh-ai-prod
+
+services:
+  # ===========================================================================
+  # 1. API Microservice (Node.js 22 LTS Alpine, non-root)
+  # ===========================================================================
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: dhushyandh-ai-api:production
+    container_name: dhushyandh-ai-api
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+    ports:
+      # Bound strictly to 127.0.0.1 (reverse proxy or host access only)
+      - "${API_BIND_ADDR:-127.0.0.1}:${PORT:-5000}:5000"
+
+    environment:
+      NODE_ENV: production
+      PORT: "5000"
+
+      # Core Database & External AI Services (injected from runtime env/secrets)
+      MONGODB_URI: ${MONGODB_URI:?MONGODB_URI is required}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      GEMINI_FALLBACK_MODEL: ${GEMINI_FALLBACK_MODEL:-gemini-3.5-flash-lite}
+      GEMINI_TIMEOUT_MS: ${GEMINI_TIMEOUT_MS:-25000}
+      GEMINI_MAX_RETRIES: ${GEMINI_MAX_RETRIES:-2}
+
+      # OpenWA WhatsApp Gateway Connectivity
+      OPENWA_BASE_URL: ${OPENWA_BASE_URL:-http://openwa:2785}
+      OPENWA_SESSION_ID: ${OPENWA_SESSION_ID:?OPENWA_SESSION_ID is required}
+      OPENWA_OPERATOR_KEY: ${OPENWA_OPERATOR_KEY:?OPENWA_OPERATOR_KEY is required}
+      OPENWA_WEBHOOK_SECRET: ${OPENWA_WEBHOOK_SECRET:?OPENWA_WEBHOOK_SECRET is required}
+
+      # Owner Access & Concurrency Locks
+      OWNER_CHAT_IDS: ${OWNER_CHAT_IDS:-}
+      LOCK_TIMEOUT_MS: ${LOCK_TIMEOUT_MS:-90000}
+      REMINDER_LOCK_TIMEOUT_MS: ${REMINDER_LOCK_TIMEOUT_MS:-90000}
+      STALE_RECOVERY_INTERVAL_MS: ${STALE_RECOVERY_INTERVAL_MS:-60000}
+
+      # Retention & Data Lifecycle
+      MESSAGE_EVENT_TTL_DAYS: ${MESSAGE_EVENT_TTL_DAYS:-30}
+
+    depends_on:
+      openwa:
+        condition: service_healthy
+
+    networks:
+      - dhushyandh-ai-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+          pids: 256
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1));"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ===========================================================================
+  # 2. OpenWA WhatsApp Gateway (Baileys Engine)
+  # ===========================================================================
+  openwa:
+    image: openwa-openwa:latest
+    container_name: dhushyandh-ai-openwa
+    restart: unless-stopped
+    stop_grace_period: 75s
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+      - SETGID
+      - SETUID
+
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    ports:
+      # OpenWA loopback exposure for direct operator maintenance if needed
+      - "127.0.0.1:2786:2785"
+
+    environment:
+      NODE_ENV: production
+      TZ: Asia/Kolkata
+      PORT: "2785"
+
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp/.config
+      XDG_CACHE_HOME: /tmp/.cache
+
+      LOG_LEVEL: info
+      AUTO_START_SESSIONS: "true"
+
+      DATABASE_TYPE: sqlite
+      ENGINE_TYPE: baileys
+      BAILEYS_AUTH_DIR: /app/data/baileys
+
+      STORAGE_TYPE: local
+      STORAGE_LOCAL_PATH: /app/data/media
+      PLUGINS_DIR: /app/data/plugins
+
+      # OpenWA Operator Authentication
+      API_MASTER_KEY: ${OPENWA_OPERATOR_KEY:?OPENWA_OPERATOR_KEY is required}
+
+      CORS_ORIGINS: http://localhost:2786,http://127.0.0.1:2786,http://api:5000
+      CSP_UPGRADE_INSECURE_REQUESTS: "false"
+      SSRF_ALLOWED_HOSTS: api,host.docker.internal
+
+    volumes:
+      # Persistent host volume preserving WhatsApp session authentication
+      - ./openwa/data:/app/data
+
+    networks:
+      - dhushyandh-ai-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.50"
+          memory: 1024M
+          pids: 512
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2785/api/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  dhushyandh-ai-net:
+    name: dhushyandh-ai-prod-net
+    driver: bridge
