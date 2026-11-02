@@ -39,7 +39,7 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
   });
 
   // --- 1. PUBLIC WELCOME MENU ---
-  it("1. Public visitor receives clean welcome menu with 1-5 numbered options", async () => {
+  it("1. Public visitor receives clean welcome menu with 1-7 numbered options", async () => {
     const res = await routeIncomingMessage({
       text: "/start",
       mode: "public",
@@ -48,11 +48,13 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
 
     assert.equal(res.handled, true);
     assert.ok(res.reply.includes("Welcome to *DHUSHYANDH AI*"));
-    assert.ok(res.reply.includes("1. 👨‍💻 *About Dhushyandh*"));
-    assert.ok(res.reply.includes("2. 🚀 *Explore Projects*"));
-    assert.ok(res.reply.includes("3. 🛠️ *Development Services*"));
-    assert.ok(res.reply.includes("4. 💼 *Hire / Work Together*"));
-    assert.ok(res.reply.includes("5. 💬 *Ask a Question*"));
+    assert.ok(res.reply.includes("1. 👨‍💻 *About Me*"));
+    assert.ok(res.reply.includes("2. 🛠️ *Skills & Technologies*"));
+    assert.ok(res.reply.includes("3. 🚀 *My Projects*"));
+    assert.ok(res.reply.includes("4. 💼 *Experience & Internships*"));
+    assert.ok(res.reply.includes("5. 📄 *Portfolio & Resume*"));
+    assert.ok(res.reply.includes("6. 💬 *Ask Me Anything*"));
+    assert.ok(res.reply.includes("7. 📬 *Contact & Connect*"));
   });
 
   // --- 2. ABOUT DHUSHYANDH (OPTION 1) ---
@@ -64,18 +66,18 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
     });
 
     assert.equal(res.handled, true);
-    assert.ok(res.reply.includes("About Dhushyandh"));
+    assert.ok(res.reply.includes("About Dhushyandh") || res.reply.includes("About Me"));
     assert.ok(res.reply.includes("Full-Stack Developer"));
     assert.ok(res.reply.includes("Node.js"));
     assert.ok(res.reply.includes("github.com/dhushyandh"));
     assert.ok(!res.reply.includes("RenewX"), "Private internal infrastructure must not be leaked");
   });
 
-  // --- 3. PROJECT EXPLORER (OPTION 2) ---
-  it("3. Public visitor option '2' initiates project explorer and allows number selection", async () => {
+  // --- 3. PROJECT EXPLORER (OPTION 3) ---
+  it("3. Public visitor option '3' initiates project explorer and allows number selection", async () => {
     // 3.1 List projects
     const listRes = await routeIncomingMessage({
-      text: "2",
+      text: "3",
       mode: "public",
       chatId: TEST_VISITOR,
     });
@@ -107,10 +109,10 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
     assert.equal(clearedState, null);
   });
 
-  // --- 4. SERVICES CATALOGUE (OPTION 3) ---
-  it("4. Public visitor option '3' returns verified development services catalogue", async () => {
+  // --- 4. SERVICES CATALOGUE ---
+  it("4. Public visitor typing 'services' returns verified development services catalogue", async () => {
     const res = await routeIncomingMessage({
-      text: "3",
+      text: "services",
       mode: "public",
       chatId: TEST_VISITOR,
     });
@@ -138,7 +140,7 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
 
     // Step 0: Start lead capture
     const step0 = await routeIncomingMessage({
-      text: "4",
+      text: "hire",
       mode: "public",
       chatId: TEST_VISITOR,
     });
@@ -317,7 +319,7 @@ describe("13. Phase 4: Public AI Assistant & Freelance Lead Management", () => {
 
       assert.equal(res.handled, true);
       assert.ok(
-        res.reply.includes("professional portfolio assistant"),
+        res.reply.includes("professional AI assistant") || res.reply.includes("professional portfolio assistant"),
         `Command '${cmd}' must be blocked for public users`
       );
       assert.ok(!res.reply.includes("Freelance Leads"), "Leads must never be shown to public users");

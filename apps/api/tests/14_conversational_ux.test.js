@@ -113,7 +113,7 @@ describe("14. Conversational UX & Response Quality", () => {
       modeRes.reply.includes("Quick Options:") || modeRes.reply.includes("Options:"),
       "Must contain structured options"
     );
-    assert.ok(modeRes.reply.includes("1. 📋 *My Tasks*"), "Must offer numbered interactive options");
+    assert.ok(modeRes.reply.includes("1. 👨‍💻 *About Me*"), "Must offer numbered interactive options");
   });
 
   // =========================================================================

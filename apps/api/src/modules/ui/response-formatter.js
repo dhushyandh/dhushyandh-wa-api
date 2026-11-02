@@ -35,20 +35,24 @@ function sanitizeResponse(text) {
 
 function formatMainMenu(ownerName = "Dhushyandh") {
   return [
-    `👋 *Welcome back, ${ownerName}!*`,
+    `Hey there! 👋`,
+    ``,
+    `Welcome to *DHUSHYANDH AI*.`,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `I'm *DHUSHYANDH AI*, your personal assistant.`,
+    `I'm the AI representation of *Dhushyandh N.* — Full-Stack Developer, Mobile App Developer & Freelancer.`,
     ``,
-    `What would you like to do today?`,
+    `How can I help you explore my work today?`,
     ``,
-    `1. 📋 *My Tasks*`,
-    `2. 📝 *My Notes*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
     `3. 🚀 *My Projects*`,
-    `4. ☀️ *Daily Summary*`,
-    `5. 💬 *Ask AI*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:* Reply with a number (1-5) or type a command like */tasks* or */daily*.`,
+    `📌 *Options:* Reply with a number (1-7) or ask any question directly!`,
   ].join("\n");
 }
 
@@ -304,10 +308,17 @@ function formatProjectDetails(project, isPrivate = false) {
   sections.push(
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:*`,
-    isPrivate
-      ? `1. 📋 *My Tasks*\n2. 📝 *My Notes*\n3. 🚀 *My Projects*\n🏠 Reply *menu* for Main Menu`
-      : `2. 🚀 *Explore Projects*\n3. 🛠️ *Development Services*\n4. 💼 *Hire / Work Together*\n🏠 Reply *menu* for Main Menu`
+    `📌 *Quick Options:*`,
+    [
+      "1. 👨‍💻 *About Me*",
+      "2. 🛠️ *Skills & Technologies*",
+      "3. 🚀 *My Projects*",
+      "4. 💼 *Experience & Internships*",
+      "5. 📄 *Portfolio & Resume*",
+      "6. 💬 *Ask Me Anything*",
+      "7. 📬 *Contact & Connect*",
+      "🏠 Reply *menu* for Main Menu",
+    ].join("\n")
   );
 
   return sections.join("\n");
@@ -386,9 +397,13 @@ function formatDailySummary({ tasks = [], projects = [], reminders = [], dateStr
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
     `📌 *Quick Options:*`,
-    `1. 📋 View Tasks (/tasks)`,
-    `2. 📝 View Notes (/notes)`,
-    `3. 🚀 View Projects (/projects)`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
     `🏠 Reply *menu* for Main Menu`
   );
   return sections.join("\n");
@@ -416,47 +431,286 @@ function formatPublicWelcome(ownerName = "Dhushyandh") {
     ``,
     `Welcome to *DHUSHYANDH AI*.`,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `I'm ${ownerName}'s AI assistant. How can I help you today?`,
+    `I'm the AI representation of *Dhushyandh N.* — Full-Stack Developer, Mobile App Developer & Freelancer.`,
     ``,
-    `1. 👨‍💻 *About ${ownerName}*`,
-    `2. 🚀 *Explore Projects*`,
-    `3. 🛠️ *Development Services*`,
-    `4. 💼 *Hire / Work Together*`,
-    `5. 💬 *Ask a Question*`,
+    `How can I help you explore my work today?`,
+    ``,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:* Reply with a number (1-5) or ask me anything directly!`,
+    `📌 *Options:* Reply with a number (1-7) or ask any question directly!`,
   ].join("\n");
 }
 
-function formatAboutOwner(profile) {
+function formatAboutMe(profile) {
   const name = profile?.name || "Dhushyandh N.";
   const title = profile?.title || "Full-Stack Developer | Mobile App Developer | Freelancer";
 
   return [
-    `👨‍💻 *About Dhushyandh*`,
+    `👨‍💻 *About Me — Meet ${name}*`,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `Meet ${name}`,
-    ``,
     `*${title}*`,
     ``,
-    `He builds modern websites, mobile applications, backend systems and AI-powered solutions.`,
+    `About Dhushyandh:`,
+    `"Dhushyandh N. is a Full-Stack Developer, Mobile App Developer and Freelancer who builds modern web applications, mobile applications, scalable backend systems and AI-powered solutions."`,
     ``,
-    `Explore his work, projects and development services.`,
+    `🎓 *Education:*`,
+    `• B.E. Computer Science Engineering (2023 - 2027)`,
+    `  C. Abdul Hakeem College of Engineering and Technology · Anna University`,
+    ``,
+    `🚀 *What I Do:*`,
+    `• Architect & build modern web apps with React, Next.js, Node.js & Express`,
+    `• Develop cross-platform mobile apps with Capacitor & Android build pipelines`,
+    `• Build scalable backend APIs, webhooks, and MongoDB/PostgreSQL databases`,
+    `• Integrate generative AI models, Google Gemini, and autonomous WhatsApp bots`,
     ``,
     `🛠️ *Core Skills:* React, Next.js, Node.js, Express, MongoDB, Python, Mobile App Development (Capacitor/Android)`,
     ``,
     `🌐 *Verified Links:*`,
     `• Portfolio: ${profile?.portfolioUrl || "https://dhushyandh.in"}`,
     `• GitHub: ${profile?.githubUrl || "https://github.com/dhushyandh"}`,
+    `• LinkedIn: ${profile?.linkedinUrl || "https://linkedin.com/in/dhushyandh"}`,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:*`,
-    `1. 👨‍💻 About Dhushyandh`,
-    `2. 🚀 Explore Projects`,
-    `3. 🛠️ Development Services`,
-    `4. 💼 Hire / Work Together`,
-    `5. 💬 Ask a Question`,
+    `📌 *Quick Options:*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`,
+  ].join("\n");
+}
+
+function formatAboutOwner(profile) {
+  return formatAboutMe(profile);
+}
+
+function formatSkillsAndTechnologies(profile) {
+  const techSkills = profile?.technicalSkills || [
+    {
+      category: "Frontend Development",
+      skills: ["React", "Next.js", "JavaScript", "TypeScript", "Tailwind CSS", "HTML5/CSS3"],
+    },
+    {
+      category: "Mobile App Development",
+      skills: ["Capacitor", "Android Builds (APK/AAB)", "Responsive Mobile Web", "Cross-Platform Apps"],
+    },
+    {
+      category: "Backend & REST APIs",
+      skills: ["Node.js (v22)", "Express 5", "REST APIs", "Webhook Architecture", "Docker"],
+    },
+    {
+      category: "Database Systems",
+      skills: ["MongoDB", "Mongoose", "PostgreSQL", "Prisma"],
+    },
+    {
+      category: "AI & Automation",
+      skills: ["Google Gemini API", "OpenWA Gateway", "Baileys Engine", "Grounded Context", "Hybrid Memory"],
+    },
+  ];
+
+  const categoryIcons = {
+    "Frontend Development": "🌐",
+    "Mobile App Development": "📱",
+    "Backend & REST APIs": "⚙️",
+    "Database Systems": "🗄️",
+    "AI & Automation": "🤖",
+  };
+
+  const sections = [
+    `🛠️ *Skills & Technologies*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Here is Dhushyandh's verified technical stack across frontend, mobile, backend, databases, and AI systems:`,
+    ``,
+  ];
+
+  for (const cat of techSkills) {
+    const icon = categoryIcons[cat.category] || "🔹";
+    sections.push(`*${icon} ${cat.category}:*`);
+    sections.push(`${cat.skills.join(" • ")}`);
+    sections.push(``);
+  }
+
+  sections.push(
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`
+  );
+
+  return sections.join("\n");
+}
+
+function formatExperienceAndInternships(profile) {
+  const experiences = profile?.experience || [
+    {
+      role: "Freelance Full Stack Developer",
+      organization: "Independent",
+      duration: "Aug 2026 - Present",
+      highlights: [
+        "Delivered real client web applications including the Sri Guru Coaching Centre website.",
+        "Built custom full-stack solutions, e-commerce architectures, and WhatsApp automations.",
+        "Developed mobile-ready architectures with Capacitor and Android Google Play packages.",
+      ],
+    },
+    {
+      role: "Full Stack Developer Intern",
+      organization: "Unified Mentor Pvt. Ltd.",
+      duration: "Aug 2026 - Oct 2026",
+      highlights: [
+        "Worked across frontend interfaces, backend services, databases, and deployment pipelines.",
+      ],
+    },
+    {
+      role: "MERN Stack Developer Intern",
+      organization: "Codec Technologies",
+      duration: "Feb 2026 - Mar 2026",
+      highlights: [
+        "Gained practical experience building React, Node.js, Express, and MongoDB applications.",
+      ],
+    },
+  ];
+
+  const sections = [
+    `💼 *Experience & Internships*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Dhushyandh's practical industry experience, completed client projects, and software internships:`,
+    ``,
+  ];
+
+  experiences.forEach((exp, idx) => {
+    sections.push(`*${idx + 1}. ${exp.role}*`);
+    sections.push(`🏢 *${exp.organization}* | 📅 ${exp.duration}`);
+    if (exp.highlights && exp.highlights.length > 0) {
+      exp.highlights.forEach((h) => {
+        sections.push(`• ${h}`);
+      });
+    }
+    sections.push(``);
+  });
+
+  sections.push(
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`
+  );
+
+  return sections.join("\n");
+}
+
+function formatPortfolioAndResume(profile) {
+  const portfolioUrl = profile?.portfolioUrl || "https://dhushyandh.in";
+  const githubUrl = profile?.githubUrl || "https://github.com/dhushyandh";
+  const linkedinUrl = profile?.linkedinUrl || "https://linkedin.com/in/dhushyandh";
+
+  return [
+    `📄 *Portfolio & Resume*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Explore Dhushyandh's verified portfolio, resume, code repositories, and professional profiles:`,
+    ``,
+    `🌐 *Live Portfolio Website:*`,
+    `• ${portfolioUrl}`,
+    `_(Features interactive project demos, engineering case studies, tech stack overviews, and mobile app packages)_`,
+    ``,
+    `💻 *GitHub Profile:*`,
+    `• ${githubUrl}`,
+    `_(Explore open-source repositories, system architectures, and commits)_`,
+    ``,
+    `💼 *LinkedIn Profile:*`,
+    `• ${linkedinUrl}`,
+    `_(Professional background, certifications, and network)_`,
+    ``,
+    `📄 *Resume / CV:*`,
+    `• View and download on portfolio: ${portfolioUrl}`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`,
+  ].join("\n");
+}
+
+function formatAskMeAnything() {
+  return [
+    `💬 *Ask Me Anything!*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `I am Dhushyandh's AI avatar. You can ask me anything about his technical background, developer journey, projects, system architectures, or availability!`,
+    ``,
+    `💡 *Example questions to try:*`,
+    `• *"What projects have you built?"*`,
+    `• *"How does the WhatsApp AI assistant architecture work?"*`,
+    `• *"Tell me about your mobile app development experience."*`,
+    `• *"What is the Sri Guru Coaching Centre project?"*`,
+    `• *"What backend and database technologies do you use?"*`,
+    `• *"Are you available for freelance work?"*`,
+    ``,
+    `Just type your question naturally! 🚀`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`,
+  ].join("\n");
+}
+
+function formatContactAndConnect(profile) {
+  const portfolioUrl = profile?.portfolioUrl || "https://dhushyandh.in";
+  const githubUrl = profile?.githubUrl || "https://github.com/dhushyandh";
+  const linkedinUrl = profile?.linkedinUrl || "https://linkedin.com/in/dhushyandh";
+
+  return [
+    `📬 *Contact & Connect*`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Interested in working together or discussing a project? Here is how to reach Dhushyandh:`,
+    ``,
+    `📱 *WhatsApp:* Right here in this chat!`,
+    `🌐 *Portfolio:* ${portfolioUrl}`,
+    `💻 *GitHub:* ${githubUrl}`,
+    `💼 *LinkedIn:* ${linkedinUrl}`,
+    ``,
+    `💼 *Freelance Projects & Consulting:*`,
+    `Dhushyandh is open for freelance projects, custom software development, mobile apps, and consulting.`,
+    ``,
+    `Would you like to leave your project details for Dhushyandh to review?`,
+    `• Reply *hire* or *start* to start a quick project inquiry`,
+    ``,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
     `🏠 Reply *menu* for Main Menu`,
   ].join("\n");
 }
@@ -469,9 +723,14 @@ function formatPublicProjects(projects = []) {
       `No public projects currently available.`,
       ``,
       `━━━━━━━━━━━━━━━━━━━━`,
-      `📌 *Options:*`,
-      `3. 🛠️ Development Services`,
-      `4. 💼 Hire Dhushyandh`,
+      `📌 *Quick Options:*`,
+      `1. 👨‍💻 *About Me*`,
+      `2. 🛠️ *Skills & Technologies*`,
+      `3. 🚀 *My Projects*`,
+      `4. 💼 *Experience & Internships*`,
+      `5. 📄 *Portfolio & Resume*`,
+      `6. 💬 *Ask Me Anything*`,
+      `7. 📬 *Contact & Connect*`,
       `🏠 Reply *menu* for Main Menu`,
     ].join("\n");
   }
@@ -494,11 +753,16 @@ function formatPublicProjects(projects = []) {
     ...lines,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:*`,
-    `• Reply with a number (e.g. *1*) to view tech stack & links`,
-    `• Reply *3* for Development Services`,
-    `• Reply *4* to Hire / Work Together`,
-    `• Reply *menu* for Main Menu`,
+    `📌 *Quick Options:*`,
+    `• Reply with a number (e.g. *1*) to view full purpose, tech stack & links`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`,
   ].join("\n");
 }
 
@@ -510,8 +774,14 @@ function formatServiceCatalogue(services = []) {
       `Services catalogue currently being updated.`,
       ``,
       `━━━━━━━━━━━━━━━━━━━━`,
-      `📌 *Options:*`,
-      `4. 💼 Hire / Contact Dhushyandh`,
+      `📌 *Quick Options:*`,
+      `1. 👨‍💻 *About Me*`,
+      `2. 🛠️ *Skills & Technologies*`,
+      `3. 🚀 *My Projects*`,
+      `4. 💼 *Experience & Internships*`,
+      `5. 📄 *Portfolio & Resume*`,
+      `6. 💬 *Ask Me Anything*`,
+      `7. 📬 *Contact & Connect*`,
       `🏠 Reply *menu* for Main Menu`,
     ].join("\n");
   }
@@ -531,11 +801,18 @@ function formatServiceCatalogue(services = []) {
     `💰 *Pricing:* Pricing depends on scope and timeline.`,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:*`,
-    `• Reply *4* or type *hire* to discuss your project`,
-    `• Reply *2* to explore past projects`,
+    `📌 *Quick Options:*`,
+    `• Reply *7* or type *hire* to start a freelance inquiry`,
+    `• Reply *3* to explore projects`,
     `• Reply *1* to know more about Dhushyandh`,
-    `• Reply *menu* for Main Menu`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
+    `🏠 Reply *menu* for Main Menu`,
   ].join("\n");
 }
 
@@ -570,10 +847,14 @@ function formatLeadSuccess(name = "") {
     `📱 He will review your requirements and reach out to you shortly via WhatsApp.`,
     ``,
     `━━━━━━━━━━━━━━━━━━━━`,
-    `📌 *Options:*`,
-    `1. 👨‍💻 About Dhushyandh`,
-    `2. 🚀 Explore Projects`,
-    `3. 🛠️ Development Services`,
+    `📌 *Quick Options:*`,
+    `1. 👨‍💻 *About Me*`,
+    `2. 🛠️ *Skills & Technologies*`,
+    `3. 🚀 *My Projects*`,
+    `4. 💼 *Experience & Internships*`,
+    `5. 📄 *Portfolio & Resume*`,
+    `6. 💬 *Ask Me Anything*`,
+    `7. 📬 *Contact & Connect*`,
     `🏠 Reply *menu* for Main Menu`,
   ].join("\n");
 }
@@ -662,33 +943,20 @@ function formatOutboundResponse(text, { mode = "public" } = {}) {
     );
 
   if (!hasOptions) {
-    if (mode === "private") {
-      cleaned += [
-        "",
-        "",
-        "━━━━━━━━━━━━━━━━━━━━",
-        "📌 *Quick Options:*",
-        "1. 📋 *My Tasks*",
-        "2. 📝 *My Notes*",
-        "3. 🚀 *My Projects*",
-        "4. ☀️ *Daily Summary*",
-        "5. 💬 *Ask AI*",
-        "🏠 Reply *menu* for Main Menu",
-      ].join("\n");
-    } else {
-      cleaned += [
-        "",
-        "",
-        "━━━━━━━━━━━━━━━━━━━━",
-        "📌 *Quick Options:*",
-        "1. 👨‍💻 *About Dhushyandh*",
-        "2. 🚀 *Explore Projects*",
-        "3. 🛠️ *Development Services*",
-        "4. 💼 *Hire / Work Together*",
-        "5. 💬 *Ask a Question*",
-        "🏠 Reply *menu* for Main Menu",
-      ].join("\n");
-    }
+    cleaned += [
+      "",
+      "",
+      "━━━━━━━━━━━━━━━━━━━━",
+      "📌 *Quick Options:*",
+      "1. 👨‍💻 *About Me*",
+      "2. 🛠️ *Skills & Technologies*",
+      "3. 🚀 *My Projects*",
+      "4. 💼 *Experience & Internships*",
+      "5. 📄 *Portfolio & Resume*",
+      "6. 💬 *Ask Me Anything*",
+      "7. 📬 *Contact & Connect*",
+      "🏠 Reply *menu* for Main Menu",
+    ].join("\n");
   }
 
   return cleaned.trim();
@@ -707,7 +975,13 @@ module.exports = {
   formatDailySummary,
   formatReminderConfirmation,
   formatPublicWelcome,
+  formatAboutMe,
   formatAboutOwner,
+  formatSkillsAndTechnologies,
+  formatExperienceAndInternships,
+  formatPortfolioAndResume,
+  formatAskMeAnything,
+  formatContactAndConnect,
   formatPublicProjects,
   formatServiceCatalogue,
   formatLeadConfirmation,

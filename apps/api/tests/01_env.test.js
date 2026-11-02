@@ -23,7 +23,8 @@ describe("1. Environment configuration validation", () => {
     assert.equal(config.PORT, 5000);
     assert.equal(config.OPENWA_SESSION_ID, "session-12345");
     assert.equal(config.GEMINI_MODEL, "gemini-3.8-flash");
-    assert.equal(config.GEMINI_FALLBACK_MODEL, "gemini-3.5-flash-lite");
+    assert.equal(config.GEMINI_FALLBACK_MODEL, "gemini-2.5-flash");
+    assert.equal(config.GEMINI_CIRCUIT_BREAKER_COOLDOWN_MS, 180000);
     assert.equal(config.GEMINI_TIMEOUT_MS, 25000);
     assert.equal(config.GEMINI_MAX_RETRIES, 2);
     assert.equal(config.LOCK_TIMEOUT_MS, 90000);

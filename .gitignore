@@ -32,3 +32,15 @@ coverage/
 scratch/
 tmp/
 temp/
+
+# Nested dependencies and generated files
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+
+# Additional sensitive files
+**/.whatsapp-session/
+**/data/
+*.pem
+*.key

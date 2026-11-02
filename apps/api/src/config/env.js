@@ -39,9 +39,11 @@ const envSchema = z.object({
 
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
 
-  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
+  GEMINI_MODEL: z.string().default("gemini-3.5-flash-lite"),
 
-  GEMINI_FALLBACK_MODEL: z.string().default("gemini-3.5-flash-lite"),
+  GEMINI_FALLBACK_MODEL: z.string().default("gemini-3.5-flash"),
+
+  GEMINI_CIRCUIT_BREAKER_COOLDOWN_MS: z.coerce.number().int().positive().default(180000),
 
   GEMINI_TIMEOUT_MS: z.coerce.number().int().positive().default(25000),
 

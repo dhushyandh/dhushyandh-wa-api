@@ -188,6 +188,7 @@ async function processIncomingMessage(message, eventKey) {
 
     // 2. Retrieve recent conversation history
     const history = await getRecentConversationHistory(message.chatId, mode);
+    const isFirstTimeUser = mode !== "private" && history.length === 0;
 
     // 3. Generate response with command router or Gemini
     const geminiStart = Date.now();
@@ -198,6 +199,7 @@ async function processIncomingMessage(message, eventKey) {
       text: message.text,
       mode,
       chatId: message.chatId,
+      isFirstTimeUser,
     });
 
     if (routerResult.handled) {
@@ -334,10 +336,13 @@ async function processIncomingMessage(message, eventKey) {
                 "",
                 "━━━━━━━━━━━━━━━━━━━━",
                 "📌 *Quick Options:*",
-                "1. 📋 *My Tasks*",
-                "2. 📝 *My Notes*",
+                "1. 👨‍💻 *About Me*",
+                "2. 🛠️ *Skills & Technologies*",
                 "3. 🚀 *My Projects*",
-                "4. ☀️ *Daily Summary*",
+                "4. 💼 *Experience & Internships*",
+                "5. 📄 *Portfolio & Resume*",
+                "6. 💬 *Ask Me Anything*",
+                "7. 📬 *Contact & Connect*",
                 "🏠 Reply *menu* for Main Menu",
               ].join("\n")
             : [
@@ -347,10 +352,13 @@ async function processIncomingMessage(message, eventKey) {
                 "",
                 "━━━━━━━━━━━━━━━━━━━━",
                 "📌 *Quick Options:*",
-                "1. 👨‍💻 *About Dhushyandh*",
-                "2. 🚀 *Explore Projects*",
-                "3. 🛠️ *Development Services*",
-                "4. 💼 *Hire / Work Together*",
+                "1. 👨‍💻 *About Me*",
+                "2. 🛠️ *Skills & Technologies*",
+                "3. 🚀 *My Projects*",
+                "4. 💼 *Experience & Internships*",
+                "5. 📄 *Portfolio & Resume*",
+                "6. 💬 *Ask Me Anything*",
+                "7. 📬 *Contact & Connect*",
                 "🏠 Reply *menu* for Main Menu",
               ].join("\n");
 

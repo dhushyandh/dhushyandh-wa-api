@@ -1,11 +1,16 @@
 const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { generateReply, setClient } = require("../src/modules/ai/gemini.service");
+const { generateReply, setClient, resetCircuitBreaker } = require("../src/modules/ai/gemini.service");
 
 describe("Gemini Service Reliability & Error Handling", () => {
+  beforeEach(() => {
+    resetCircuitBreaker();
+  });
+
   afterEach(() => {
-    // Reset client to null so real or fresh mock is loaded
+    // Reset client to null and reset circuit breaker
     setClient(null);
+    resetCircuitBreaker();
   });
 
   it("10. Gemini successful generation using mocked API response", async () => {

@@ -80,10 +80,13 @@ describe("12. Phase 3: Personal AI Assistant, Task Management & UX", () => {
 
     assert.equal(menuResult.handled, true);
     assert.ok(menuResult.reply.includes("DHUSHYANDH AI"));
-    assert.ok(menuResult.reply.includes("1. 📋 *My Tasks*"));
-    assert.ok(menuResult.reply.includes("2. 📝 *My Notes*"));
+    assert.ok(menuResult.reply.includes("1. 👨‍💻 *About Me*"));
+    assert.ok(menuResult.reply.includes("2. 🛠️ *Skills & Technologies*"));
     assert.ok(menuResult.reply.includes("3. 🚀 *My Projects*"));
-    assert.ok(menuResult.reply.includes("4. ☀️ *Daily Summary*"));
+    assert.ok(menuResult.reply.includes("4. 💼 *Experience & Internships*"));
+    assert.ok(menuResult.reply.includes("5. 📄 *Portfolio & Resume*"));
+    assert.ok(menuResult.reply.includes("6. 💬 *Ask Me Anything*"));
+    assert.ok(menuResult.reply.includes("7. 📬 *Contact & Connect*"));
 
     // User chooses option '1'
     const choice1 = await routeIncomingMessage({
@@ -92,7 +95,7 @@ describe("12. Phase 3: Personal AI Assistant, Task Management & UX", () => {
       chatId: TEST_OWNER,
     });
     assert.equal(choice1.handled, true);
-    assert.ok(choice1.reply.includes("Tasks"));
+    assert.ok(choice1.reply.includes("About Me — Meet"));
   });
 
   // --- 3. TASK CRUD & NATURAL LANGUAGE ---
@@ -316,7 +319,7 @@ describe("12. Phase 3: Personal AI Assistant, Task Management & UX", () => {
 
     // Exactly one outbound WhatsApp sendText must be dispatched
     assert.equal(sentCalls.length, 1);
-    assert.ok(sentCalls[0].text.includes("Welcome back"));
+    assert.ok(sentCalls[0].text.includes("Welcome to *DHUSHYANDH AI*"));
 
     // Database record must be marked 'sent'
     const record = await MessageEvent.findOne({ eventKey });

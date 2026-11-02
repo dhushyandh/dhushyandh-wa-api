@@ -18,7 +18,7 @@ function detectIntent(text) {
     return "PROJECT_DHUSHYANDH_AI";
   }
 
-  if (/who\s+are\s+you|about\s+you|who\s+is\s+dhushyandh|background|skills|tech\s+stack|developer|profile|experience|education/i.test(lower)) {
+  if (/who\s+are\s+you|about\s+you|about\s+me|who\s+is\s+dhushyandh|background|skills|tech\s+stack|developer|profile|experience|internship|education|resume|cv/i.test(lower)) {
     return "PROFILE_INTENT";
   }
 
@@ -82,11 +82,35 @@ async function retrieveContext({ text, mode = "public", chatId = null }) {
   if (profile) {
     let profileBody = `Name: ${profile.name}\nTitle: ${profile.title}\nBio: ${profile.bio || "Full-stack developer & AI systems engineer."}`;
 
+    if (profile.education && profile.education.length > 0) {
+      const eduSummary = profile.education
+        .map((e) => `${e.degree} (${e.institution}, ${e.year})`)
+        .join("; ");
+      profileBody += `\nEducation: ${eduSummary}`;
+    }
+
     if (profile.technicalSkills && profile.technicalSkills.length > 0) {
       const skillsSummary = profile.technicalSkills
         .map((g) => `${g.category}: ${g.skills.join(", ")}`)
         .join("; ");
       profileBody += `\nTechnical Skills: ${skillsSummary}`;
+    }
+
+    if (profile.experience && profile.experience.length > 0) {
+      const expSummary = profile.experience
+        .map((e) => `* ${e.role} at ${e.organization} (${e.duration}): ${(e.highlights || []).join(", ")}`)
+        .join("\n");
+      profileBody += `\nExperience & Internships:\n${expSummary}`;
+    }
+
+    if (profile.portfolioUrl) {
+      profileBody += `\nPortfolio: ${profile.portfolioUrl}`;
+    }
+    if (profile.githubUrl) {
+      profileBody += `\nGitHub: ${profile.githubUrl}`;
+    }
+    if (profile.linkedinUrl) {
+      profileBody += `\nLinkedIn: ${profile.linkedinUrl}`;
     }
 
     if (intent === "SERVICES_INTENT" && profile.services && profile.services.length > 0) {

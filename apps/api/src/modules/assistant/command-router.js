@@ -7,7 +7,13 @@ const {
   formatProjectList,
   formatProjectDetails,
   formatPublicWelcome,
+  formatAboutMe,
   formatAboutOwner,
+  formatSkillsAndTechnologies,
+  formatExperienceAndInternships,
+  formatPortfolioAndResume,
+  formatAskMeAnything,
+  formatContactAndConnect,
   formatPublicProjects,
   formatServiceCatalogue,
   formatLeadConfirmation,
@@ -59,7 +65,7 @@ const logger = require("../../utils/logger");
  * Handles both public visitor interactions (welcome menu, project explorer, lead capture)
  * and private owner commands (tasks, notes, reminders, projects, leads).
  */
-async function routeIncomingMessage({ text, mode, chatId }) {
+async function routeIncomingMessage({ text, mode, chatId, isFirstTimeUser = false }) {
   if (!text || typeof text !== "string") {
     return { handled: false };
   }
@@ -191,18 +197,36 @@ async function routeIncomingMessage({ text, mode, chatId }) {
   // 2. PUBLIC MODE ROUTING & NUMBERED MENU
   // =========================================================================
   if (mode !== "private") {
-    // 2.1 Public Welcome Menu
-    if (/^(\/start|\/menu|menu|hi|hello|hey|help)$/i.test(raw)) {
-      return {
-        handled: true,
-        reply: formatPublicWelcome("Dhushyandh"),
-      };
+    // 2.1 Public Welcome Menu & Main Menu requests (for first-time & returning public users)
+    const isExplicitMenuRequest =
+      /^(\/start|\/menu|menu|main menu|show menu|open menu|options|quick options|help|\/help|home|welcome|back to menu|start)$/i.test(
+        lower
+      );
+
+    const isGreeting =
+      /^(hi|hello|hey|hey there|hi there|hello there|good morning|good afternoon|good evening|greetings)\b/i.test(
+        lower
+      );
+
+    if (isExplicitMenuRequest || isGreeting || isFirstTimeUser) {
+      const isNumberedOption = /^[1-7]$/.test(raw);
+      const isKeywordAction =
+        /^(about|skills|projects|experience|internships|portfolio|resume|cv|hire|contact|services|ask)\b/i.test(
+          lower
+        );
+
+      if (!isNumberedOption && !isKeywordAction) {
+        return {
+          handled: true,
+          reply: formatPublicWelcome("Dhushyandh N."),
+        };
+      }
     }
 
-    // 2.2 Option 1: About Dhushyandh / Who is Dhushyandh
+    // 2.2 Option 1: About Me
     if (
       raw === "1" ||
-      /^(about|about dhushyandh|who is dhushyandh|meet dhushyandh|tell me about dhushyandh)\??$/i.test(lower)
+      /^(about|about me|about dhushyandh|who is dhushyandh|who are you|meet dhushyandh|tell me about (?:yourself|dhushyandh))\??$/i.test(lower)
     ) {
       const profile = await getProfile({ mode: "public" });
       const ogImagePath = path.join(__dirname, "../../../assets/og-image.png");
@@ -222,39 +246,26 @@ async function routeIncomingMessage({ text, mode, chatId }) {
           base64: base64 || undefined,
           mimetype: "image/png",
         },
-        reply: formatAboutOwner(profile),
+        reply: formatAboutMe(profile),
       };
     }
 
-    // 2.2.1 Mobile App Developer Query
-    if (/is\s+he\s+a\s+mobile\s+app\s+developer|mobile\s+app\s+developer|does\s+he\s+build\s+mobile\s+apps/i.test(lower)) {
-      return {
-        handled: true,
-        reply: [
-          "📱 *Mobile Application Development*",
-          "━━━━━━━━━━━━━━━━━━━━",
-          "Yes! Dhushyandh N. is an experienced Mobile App Developer as well as a Full-Stack Developer. 🚀",
-          "",
-          "He builds cross-platform mobile applications using Capacitor, React, and Android build pipelines. He has developed mobile packages for the Dhushyandh Portfolio app and mobile-ready commerce architectures.",
-          "",
-          "🌐 Portfolio: https://dhushyandh.in",
-          "💻 GitHub: https://github.com/dhushyandh",
-          "",
-          "━━━━━━━━━━━━━━━━━━━━",
-          "📌 *Options:*",
-          "1. 👨‍💻 *About Dhushyandh*",
-          "2. 🚀 *Explore Projects*",
-          "3. 🛠️ *Development Services*",
-          "4. 💼 *Hire for a Mobile App*",
-          "🏠 Reply *menu* for Main Menu",
-        ].join("\n"),
-      };
-    }
-
-    // 2.3 Option 2: Explore Projects / Where can I see his work
+    // 2.3 Option 2: Skills & Technologies
     if (
       raw === "2" ||
-      /^(explore projects|projects|portfolio|show (?:his )?projects|where can i see (?:his )?work|see (?:his )?work)\??$/i.test(lower)
+      /^(skills|technologies|skills & technologies|skills and technologies|tech stack|technical skills|what are your skills|what are his skills)\??$/i.test(lower)
+    ) {
+      const profile = await getProfile({ mode: "public" });
+      return {
+        handled: true,
+        reply: formatSkillsAndTechnologies(profile),
+      };
+    }
+
+    // 2.4 Option 3: My Projects / Explore Projects
+    if (
+      raw === "3" ||
+      /^(3|my projects|projects|explore projects|portfolio projects|show projects|see projects|where can i see his work|where can i see your work)\??$/i.test(lower)
     ) {
       const projects = await getProjects({ mode: "public" });
       await setState(chatId, { flow: "project_explorer", step: "select", data: {} });
@@ -264,11 +275,55 @@ async function routeIncomingMessage({ text, mode, chatId }) {
       };
     }
 
-    // 2.4 Option 3: Development Services / What services does he provide
+    // 2.5 Option 4: Experience & Internships
     if (
-      raw === "3" ||
-      /^(services|development services|what services does he provide|what services are available)\??$/i.test(lower)
+      raw === "4" ||
+      /^(experience|internships|experience & internships|experience and internships|work experience|work history|where have you worked|companies|internship)\??$/i.test(lower)
     ) {
+      const profile = await getProfile({ mode: "public" });
+      return {
+        handled: true,
+        reply: formatExperienceAndInternships(profile),
+      };
+    }
+
+    // 2.6 Option 5: Portfolio & Resume
+    if (
+      raw === "5" ||
+      /^(portfolio|resume|portfolio & resume|portfolio and resume|cv|github|links|download resume|view resume)\??$/i.test(lower)
+    ) {
+      const profile = await getProfile({ mode: "public" });
+      return {
+        handled: true,
+        reply: formatPortfolioAndResume(profile),
+      };
+    }
+
+    // 2.7 Option 6: Ask Me Anything
+    if (
+      raw === "6" ||
+      /^(ask|ask me anything|ask ai|ask a question|questions|faq)\??$/i.test(lower)
+    ) {
+      return {
+        handled: true,
+        reply: formatAskMeAnything(),
+      };
+    }
+
+    // 2.8 Option 7: Contact & Connect
+    if (
+      raw === "7" ||
+      /^(contact|connect|contact & connect|contact and connect|reach|reach out|contact details|email)\??$/i.test(lower)
+    ) {
+      const profile = await getProfile({ mode: "public" });
+      return {
+        handled: true,
+        reply: formatContactAndConnect(profile),
+      };
+    }
+
+    // 2.8.1 Services Catalogue query trigger
+    if (/^(services|development services|what services does he provide|what services are available)\??$/i.test(lower)) {
       const profile = await getProfile({ mode: "public" });
       return {
         handled: true,
@@ -276,11 +331,8 @@ async function routeIncomingMessage({ text, mode, chatId }) {
       };
     }
 
-    // 2.5 Option 4: Hire / Work Together / Can I hire him
-    if (
-      raw === "4" ||
-      /^(hire|work together|contact|lead|quote|can i hire him|how to hire him)\??$/i.test(lower)
-    ) {
+    // 2.8.2 Hire / Start Project lead capture flow trigger
+    if (/^(hire|hire dhushyandh|start|start project|start a project|work together|collaborate|inquiry|quote|can i hire him|how to hire him)\??$/i.test(lower)) {
       await setState(chatId, { flow: "lead_capture", step: "name", data: {} });
       return {
         handled: true,
@@ -297,47 +349,58 @@ async function routeIncomingMessage({ text, mode, chatId }) {
       };
     }
 
-    // 2.6 Option 5: Ask a Question
-    if (raw === "5") {
+    // 2.9 Mobile App Developer Query (natural question support)
+    if (/is\s+he\s+a\s+mobile\s+app\s+developer|mobile\s+app\s+developer|does\s+he\s+build\s+mobile\s+apps/i.test(lower)) {
       return {
         handled: true,
         reply: [
-          "💬 *Ask AI Anything*",
+          "📱 *Mobile Application Development*",
           "━━━━━━━━━━━━━━━━━━━━",
-          "Feel free to ask me anything about Dhushyandh's skills, technical stack, or public projects! Just type your question directly.",
+          "Yes! Dhushyandh N. is an experienced Mobile App Developer as well as a Full-Stack Developer. 🚀",
+          "",
+          "He builds cross-platform mobile applications using Capacitor, React, and Android build pipelines. He has developed mobile packages for the Dhushyandh Portfolio app and mobile-ready commerce architectures.",
+          "",
+          "🌐 Portfolio: https://dhushyandh.in",
+          "💻 GitHub: https://github.com/dhushyandh",
           "",
           "━━━━━━━━━━━━━━━━━━━━",
-          "📌 *Options:*",
-          "1. 👨‍💻 *About Dhushyandh*",
-          "2. 🚀 *Explore Projects*",
-          "3. 🛠️ *Development Services*",
-          "4. 💼 *Hire / Work Together*",
+          "📌 *Quick Options:*",
+          "1. 👨‍💻 *About Me*",
+          "2. 🛠️ *Skills & Technologies*",
+          "3. 🚀 *My Projects*",
+          "4. 💼 *Experience & Internships*",
+          "5. 📄 *Portfolio & Resume*",
+          "6. 💬 *Ask Me Anything*",
+          "7. 📬 *Contact & Connect*",
           "🏠 Reply *menu* for Main Menu",
         ].join("\n"),
       };
     }
 
-    // 2.7 Block private owner commands from public users
+    // 2.10 Block private owner commands from public users
     if (/^\/(task|tasks|note|notes|daily|remind|reminders|memories|lead|leads)\b/i.test(raw)) {
       return {
         handled: true,
         reply: [
           "👋 *Hello! Welcome to DHUSHYANDH AI.*",
           "━━━━━━━━━━━━━━━━━━━━",
-          "I am Dhushyandh's professional portfolio assistant. I can answer questions about his skills, projects, and development services.",
+          "I am Dhushyandh's professional portfolio assistant & AI representation. I can answer questions about his skills, projects, experience, and development services.",
           "",
           "━━━━━━━━━━━━━━━━━━━━",
-          "📌 *Options:*",
-          "1. 👨‍💻 *About Dhushyandh*",
-          "2. 🚀 *Explore Projects*",
-          "3. 🛠️ *Development Services*",
-          "4. 💼 *Hire / Work Together*",
+          "📌 *Quick Options:*",
+          "1. 👨‍💻 *About Me*",
+          "2. 🛠️ *Skills & Technologies*",
+          "3. 🚀 *My Projects*",
+          "4. 💼 *Experience & Internships*",
+          "5. 📄 *Portfolio & Resume*",
+          "6. 💬 *Ask Me Anything*",
+          "7. 📬 *Contact & Connect*",
           "🏠 Reply *menu* for Main Menu",
         ].join("\n"),
       };
     }
 
-    // 2.8 Mode questions in public mode
+    // 2.11 Mode questions in public mode
     if (
       /(?:switch|change)\s+(?:to\s+)?(?:public|private)\s+mode/i.test(lower) ||
       /how\s+do\s+(?:the\s+)?(?:public\s+and\s+private\s+)?modes\s+work/i.test(lower) ||
@@ -349,37 +412,43 @@ async function routeIncomingMessage({ text, mode, chatId }) {
         reply: [
           "🔒 *Mode Behavior:*",
           "━━━━━━━━━━━━━━━━━━━━",
-          "1. 🌐 *Public Mode:* Public Mode is active for all standard WhatsApp visitors to explore projects, review services, and submit inquiries.",
+          "1. 🌐 *Public Mode:* Public Mode is active for all standard WhatsApp visitors to explore projects, review experience, and submit inquiries.",
           "2. 🔐 *Private Mode:* Private Mode is restricted to the authorized owner via verified WhatsApp LID authorization.",
           "",
-          "_Manual mode switching is not available. Visitors in Public Mode can explore projects, review services, or submit freelance inquiries._",
+          "_Manual mode switching is not available. Visitors in Public Mode can explore projects, review experience, or submit freelance inquiries._",
           "",
           "━━━━━━━━━━━━━━━━━━━━",
-          "📌 *Options:*",
-          "1. 👨‍💻 *About Dhushyandh*",
-          "2. 🚀 *Explore Projects*",
-          "3. 🛠️ *Development Services*",
-          "4. 💼 *Hire / Work Together*",
+          "📌 *Quick Options:*",
+          "1. 👨‍💻 *About Me*",
+          "2. 🛠️ *Skills & Technologies*",
+          "3. 🚀 *My Projects*",
+          "4. 💼 *Experience & Internships*",
+          "5. 📄 *Portfolio & Resume*",
+          "6. 💬 *Ask Me Anything*",
+          "7. 📬 *Contact & Connect*",
           "🏠 Reply *menu* for Main Menu",
         ].join("\n"),
       };
     }
 
-    // 2.9 Strict privacy guard for unlisted/private project queries
+    // 2.12 Strict privacy guard for unlisted/private project queries
     if (/\brenewx\b/i.test(lower)) {
       return {
         handled: true,
         reply: [
           "🔒 *Project Privacy Notice*",
           "━━━━━━━━━━━━━━━━━━━━",
-          "I do not have access to any public project by that name. You can explore verified public projects by typing 2 or 'projects'.",
+          "I do not have access to any public project by that name. You can explore verified public projects by typing 3 or 'projects'.",
           "",
           "━━━━━━━━━━━━━━━━━━━━",
-          "📌 *Options:*",
-          "1. 👨‍💻 *About Dhushyandh*",
-          "2. 🚀 *Explore Projects*",
-          "3. 🛠️ *Development Services*",
-          "4. 💼 *Hire / Work Together*",
+          "📌 *Quick Options:*",
+          "1. 👨‍💻 *About Me*",
+          "2. 🛠️ *Skills & Technologies*",
+          "3. 🚀 *My Projects*",
+          "4. 💼 *Experience & Internships*",
+          "5. 📄 *Portfolio & Resume*",
+          "6. 💬 *Ask Me Anything*",
+          "7. 📬 *Contact & Connect*",
           "🏠 Reply *menu* for Main Menu",
         ].join("\n"),
       };
@@ -393,33 +462,109 @@ async function routeIncomingMessage({ text, mode, chatId }) {
   // 3. PRIVATE OWNER MODE DIRECT ROUTING
   // =========================================================================
 
+  // 3.0 Owner preview of public portfolio menu
+  if (/^(\/public|\/portfolio|public menu|portfolio menu|preview public)$/i.test(lower)) {
+    return {
+      handled: true,
+      reply: formatPublicWelcome("Dhushyandh N."),
+    };
+  }
+
   // 3.1 MAIN MENU
-  if (/^(\/menu|\/start|menu|options|help)$/i.test(raw)) {
+  if (/^(\/menu|\/start|menu|main menu|options|help|\/help)$/i.test(lower)) {
     return { handled: true, reply: formatMainMenu("Dhushyandh") };
   }
 
-  // 3.2 MENU NUMERIC CHOICES
-  if (raw === "1") {
-    const tasks = await listTasks({ ownerChatId: chatId, status: "pending" });
-    return { handled: true, reply: formatTaskList(tasks, "Pending") };
-  }
-  if (raw === "2") {
-    const notes = await listNotes({ ownerChatId: chatId, limit: 10 });
-    return { handled: true, reply: formatNoteList(notes) };
-  }
-  if (raw === "3") {
-    const projects = await getProjects({ mode: "private" });
-    return { handled: true, reply: formatProjectList(projects, true) };
-  }
-  if (raw === "4") {
-    const summary = await generateDailySummary({ ownerChatId: chatId });
-    return { handled: true, reply: summary };
-  }
-  if (raw === "5") {
+  // 3.2 MENU NUMERIC CHOICES (7 Professional Developer Portfolio Options)
+  if (
+    raw === "1" ||
+    /^(about|about me|about dhushyandh|who is dhushyandh|who are you|meet dhushyandh|tell me about (?:yourself|dhushyandh))\??$/i.test(lower)
+  ) {
+    const profile = await getProfile({ mode: "private" });
+    const ogImagePath = path.join(__dirname, "../../../assets/og-image.png");
+    let base64 = "";
+    try {
+      if (fs.existsSync(ogImagePath)) {
+        base64 = fs.readFileSync(ogImagePath).toString("base64");
+      }
+    } catch (err) {
+      logger.warn("Could not read local og-image.png", { error: err.message });
+    }
+
     return {
       handled: true,
-      reply:
-        "💬 *Ask AI Anything*\n\nYou can chat with me about architecture, code, ideas, or ask questions about your projects. Just send a message normally!",
+      sendImageBefore: {
+        url: "https://dhushyandh.in/og-image.png",
+        base64: base64 || undefined,
+        mimetype: "image/png",
+      },
+      reply: formatAboutMe(profile),
+    };
+  }
+
+  if (
+    raw === "2" ||
+    /^(skills|technologies|skills & technologies|skills and technologies|tech stack|technical skills|what are your skills|what are his skills)\??$/i.test(lower)
+  ) {
+    const profile = await getProfile({ mode: "private" });
+    return {
+      handled: true,
+      reply: formatSkillsAndTechnologies(profile),
+    };
+  }
+
+  if (
+    raw === "3" ||
+    /^(3|my projects|projects|explore projects|portfolio projects|show projects|see projects)\??$/i.test(lower)
+  ) {
+    const projects = await getProjects({ mode: "private" });
+    await setState(chatId, { flow: "project_explorer", step: "select", data: {} });
+    return {
+      handled: true,
+      reply: formatPublicProjects(projects),
+    };
+  }
+
+  if (
+    raw === "4" ||
+    /^(experience|internships|experience & internships|experience and internships|work experience|work history|where have you worked|companies|internship)\??$/i.test(lower)
+  ) {
+    const profile = await getProfile({ mode: "private" });
+    return {
+      handled: true,
+      reply: formatExperienceAndInternships(profile),
+    };
+  }
+
+  if (
+    raw === "5" ||
+    /^(portfolio|resume|portfolio & resume|portfolio and resume|cv|github|links|download resume|view resume)\??$/i.test(lower)
+  ) {
+    const profile = await getProfile({ mode: "private" });
+    return {
+      handled: true,
+      reply: formatPortfolioAndResume(profile),
+    };
+  }
+
+  if (
+    raw === "6" ||
+    /^(ask|ask me anything|ask ai|ask a question|questions|faq)\??$/i.test(lower)
+  ) {
+    return {
+      handled: true,
+      reply: formatAskMeAnything(),
+    };
+  }
+
+  if (
+    raw === "7" ||
+    /^(contact|connect|contact & connect|contact and connect|reach|reach out|contact details|email)\??$/i.test(lower)
+  ) {
+    const profile = await getProfile({ mode: "private" });
+    return {
+      handled: true,
+      reply: formatContactAndConnect(profile),
     };
   }
 
@@ -715,10 +860,13 @@ async function routeIncomingMessage({ text, mode, chatId }) {
         "",
         "━━━━━━━━━━━━━━━━━━━━",
         "📌 *Quick Options:*",
-        "1. 📋 *My Tasks*",
-        "2. 📝 *My Notes*",
+        "1. 👨‍💻 *About Me*",
+        "2. 🛠️ *Skills & Technologies*",
         "3. 🚀 *My Projects*",
-        "4. ☀️ *Daily Summary*",
+        "4. 💼 *Experience & Internships*",
+        "5. 📄 *Portfolio & Resume*",
+        "6. 💬 *Ask Me Anything*",
+        "7. 📬 *Contact & Connect*",
         "🏠 Reply *menu* for Main Menu",
       ].join("\n"),
     };
@@ -743,10 +891,13 @@ async function routeIncomingMessage({ text, mode, chatId }) {
         "",
         "━━━━━━━━━━━━━━━━━━━━",
         "📌 *Quick Options:*",
-        "1. 📋 *My Tasks*",
-        "2. 📝 *My Notes*",
+        "1. 👨‍💻 *About Me*",
+        "2. 🛠️ *Skills & Technologies*",
         "3. 🚀 *My Projects*",
-        "4. ☀️ *Daily Summary*",
+        "4. 💼 *Experience & Internships*",
+        "5. 📄 *Portfolio & Resume*",
+        "6. 💬 *Ask Me Anything*",
+        "7. 📬 *Contact & Connect*",
         "🏠 Reply *menu* for Main Menu",
       ].join("\n"),
     };

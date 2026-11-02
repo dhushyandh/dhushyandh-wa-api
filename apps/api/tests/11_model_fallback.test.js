@@ -2,12 +2,21 @@ const { describe, it, beforeEach, afterEach, before, after } = require("node:tes
 const assert = require("node:assert/strict");
 const mongoose = require("mongoose");
 const env = require("../src/config/env");
-const { generateReply, setClient } = require("../src/modules/ai/gemini.service");
+const {
+  generateReply,
+  setClient,
+  resetCircuitBreaker,
+  getCircuitBreakerStatus,
+  tripCircuitBreaker,
+} = require("../src/modules/ai/gemini.service");
 const { processIncomingMessage } = require("../src/modules/webhook/message-processor");
 const { setFetch } = require("../src/modules/openwa/openwa.service");
 const MessageEvent = require("../src/modules/webhook/message-event.model");
 
 describe("11. Gemini Model Fallback & Resilience System", () => {
+  const primaryModelName = env.GEMINI_MODEL || "gemini-3.5-flash-lite";
+  const fallbackModelName = env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash";
+
   before(async () => {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(env.MONGODB_URI);
@@ -21,6 +30,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
   });
 
   beforeEach(async () => {
+    resetCircuitBreaker();
     if (mongoose.connection.readyState !== 0) {
       await mongoose.connection.collection("conversationstates").deleteMany({});
     }
@@ -29,6 +39,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
   afterEach(() => {
     setClient(null);
     setFetch(null);
+    resetCircuitBreaker();
   });
 
   it("1. Primary model succeeds directly on first attempt", async () => {
@@ -53,19 +64,20 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     });
 
     assert.equal(reply, "Direct primary response");
-    assert.deepEqual(modelCalls, ["gemini-3.8-flash"]);
-    assert.equal(meta.selectedModel, "gemini-3.8-flash");
+    assert.deepEqual(modelCalls, [primaryModelName]);
+    assert.equal(meta.selectedModel, primaryModelName);
     assert.equal(meta.isFallback, false);
     assert.equal(meta.attempts, 1);
+    assert.equal(getCircuitBreakerStatus().isOpen, false);
   });
 
-  it("2. Primary 503 UNAVAILABLE then fallback succeeds", async () => {
+  it("2. Primary 503 UNAVAILABLE fast-fails and fallback succeeds without repeating slow requests", async () => {
     const modelCalls = [];
     const mockAi = {
       models: {
         generateContent: async ({ model }) => {
           modelCalls.push(model);
-          if (model === "gemini-3.8-flash") {
+          if (model === primaryModelName) {
             const err = new Error("503 UNAVAILABLE: The model is overloaded");
             err.status = 503;
             throw err;
@@ -86,23 +98,25 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     });
 
     assert.equal(reply, "Recovered via fallback model on 503");
-    // Primary has maxRetries=2, so 3 attempts (initial + 2 retries)
-    const primaryCalls = modelCalls.filter((m) => m === "gemini-3.8-flash");
-    const fallbackCalls = modelCalls.filter((m) => m === "gemini-3.5-flash-lite");
+    // For 503 capacity errors, primary avoids repeating slow requests: exactly 1 attempt before fallback
+    const primaryCalls = modelCalls.filter((m) => m === primaryModelName);
+    const fallbackCalls = modelCalls.filter((m) => m === fallbackModelName);
 
-    assert.equal(primaryCalls.length, 3, "Primary model should exhaust all 3 configured attempts");
+    assert.equal(primaryCalls.length, 1, "Primary model should fast-fail on 503 without repeating slow requests");
     assert.equal(fallbackCalls.length, 1, "Fallback model should be invoked and succeed on attempt 1");
-    assert.equal(meta.selectedModel, "gemini-3.5-flash-lite");
+    assert.equal(meta.selectedModel, fallbackModelName);
     assert.equal(meta.isFallback, true);
+    // Circuit breaker was tripped into cooldown
+    assert.equal(getCircuitBreakerStatus().isOpen, true);
   });
 
-  it("3. Primary 504 DEADLINE_EXCEEDED then fallback succeeds", async () => {
+  it("3. Primary 504 DEADLINE_EXCEEDED preserves safe transient retries then fallback succeeds", async () => {
     const modelCalls = [];
     const mockAi = {
       models: {
         generateContent: async ({ model }) => {
           modelCalls.push(model);
-          if (model === "gemini-3.8-flash") {
+          if (model === primaryModelName) {
             const err = new Error("504 DEADLINE_EXCEEDED: Deadline expired");
             err.status = 504;
             throw err;
@@ -123,12 +137,12 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     });
 
     assert.equal(reply, "Recovered via fallback model on 504");
-    const primaryCalls = modelCalls.filter((m) => m === "gemini-3.8-flash");
-    const fallbackCalls = modelCalls.filter((m) => m === "gemini-3.5-flash-lite");
+    const primaryCalls = modelCalls.filter((m) => m === primaryModelName);
+    const fallbackCalls = modelCalls.filter((m) => m === fallbackModelName);
 
-    assert.equal(primaryCalls.length, 3, "Primary should exhaust 3 attempts before fallback");
+    assert.equal(primaryCalls.length, 3, "Primary should safely retry transient timeouts before fallback");
     assert.equal(fallbackCalls.length, 1, "Fallback model should succeed");
-    assert.equal(meta.selectedModel, "gemini-3.5-flash-lite");
+    assert.equal(meta.selectedModel, fallbackModelName);
   });
 
   it("4. Both primary and fallback models fail (allModelsFailed)", async () => {
@@ -158,17 +172,17 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
       },
       (err) => {
         assert.equal(err.allModelsFailed, true);
-        assert.equal(err.primaryModel, "gemini-3.8-flash");
-        assert.equal(err.fallbackModel, "gemini-3.5-flash-lite");
+        assert.equal(err.primaryModel, primaryModelName);
+        assert.equal(err.fallbackModel, fallbackModelName);
         return true;
       }
     );
 
-    const primaryCalls = modelCalls.filter((m) => m === "gemini-3.8-flash");
-    const fallbackCalls = modelCalls.filter((m) => m === "gemini-3.5-flash-lite");
+    const primaryCalls = modelCalls.filter((m) => m === primaryModelName);
+    const fallbackCalls = modelCalls.filter((m) => m === fallbackModelName);
 
-    assert.equal(primaryCalls.length, 3, "Primary exhausted 3 attempts");
-    assert.equal(fallbackCalls.length, 3, "Fallback exhausted 3 attempts");
+    assert.equal(primaryCalls.length, 1, "Primary fast-fails on 503 capacity error");
+    assert.equal(fallbackCalls.length, 1, "Fallback fast-fails on 503 capacity error without repeating");
     assert.equal(meta.selectedModel, null);
     assert.equal(meta.errorClassification, "GEMINI_TRANSIENT_SERVER_ERROR");
   });
@@ -205,7 +219,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     );
 
     assert.equal(modelCalls.length, 1, "Must fail immediately without retrying on 401");
-    assert.equal(modelCalls[0], "gemini-3.8-flash");
+    assert.equal(modelCalls[0], primaryModelName);
     assert.equal(meta.selectedModel, null);
   });
 
@@ -214,7 +228,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     const mockAi = {
       models: {
         generateContent: async ({ model, config }) => {
-          if (model === "gemini-3.8-flash") {
+          if (model === primaryModelName) {
             const err = new Error("504 DEADLINE_EXCEEDED");
             err.status = 504;
             throw err;
@@ -252,7 +266,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     const mockAi = {
       models: {
         generateContent: async ({ model, config }) => {
-          if (model === "gemini-3.8-flash") {
+          if (model === primaryModelName) {
             const err = new Error("503 UNAVAILABLE");
             err.status = 503;
             throw err;
@@ -272,6 +286,9 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
       requestId: "test-public-isolation",
       backoffBaseMs: 5,
     });
+
+    // Reset circuit breaker between runs so private mode also starts clean
+    resetCircuitBreaker();
 
     // Run private mode fallback
     await generateReply({
@@ -303,7 +320,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     const mockAi = {
       models: {
         generateContent: async ({ model }) => {
-          if (model === "gemini-3.8-flash") {
+          if (model === primaryModelName) {
             const err = new Error("503 UNAVAILABLE");
             err.status = 503;
             throw err;
@@ -336,7 +353,7 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     const record = await MessageEvent.findOne({ eventKey });
     assert.ok(record);
     assert.equal(record.status, "sent");
-    assert.equal(record.selectedModel, "gemini-3.5-flash-lite");
+    assert.equal(record.selectedModel, fallbackModelName);
   });
 
   it("9. Message processor sends concise unavailability response when all models fail without falsely marking sent", async () => {
@@ -388,5 +405,75 @@ describe("11. Gemini Model Fallback & Resilience System", () => {
     assert.ok(record);
     assert.equal(record.status, "failed", "Database status must be failed, NOT sent");
     assert.equal(record.errorCategory, "GEMINI_TRANSIENT_SERVER_ERROR");
+  });
+
+  it("10. Circuit breaker routes directly to fallback when primary model is in cooldown", async () => {
+    // Manually trip the circuit breaker into cooldown
+    tripCircuitBreaker("PRIMARY_CAPACITY_EXHAUSTED", 180000);
+    assert.equal(getCircuitBreakerStatus().isOpen, true);
+
+    const modelCalls = [];
+    const mockAi = {
+      models: {
+        generateContent: async ({ model }) => {
+          modelCalls.push(model);
+          return { text: "Direct fallback response while in cooldown" };
+        },
+      },
+    };
+    setClient(mockAi);
+
+    const meta = {};
+    const reply = await generateReply({
+      message: "Quick question during cooldown",
+      mode: "public",
+      requestId: "test-circuit-breaker-cooldown",
+      metadataOut: meta,
+      backoffBaseMs: 5,
+    });
+
+    assert.equal(reply, "Direct fallback response while in cooldown");
+    // Primary model must NOT have been called at all
+    assert.deepEqual(modelCalls, [fallbackModelName]);
+    assert.equal(meta.selectedModel, fallbackModelName);
+    assert.equal(meta.isFallback, true);
+    assert.equal(meta.circuitBreakerEngaged, true);
+  });
+
+  it("11. Circuit breaker recovers and resets to healthy closed state on primary model success", async () => {
+    // Trip the circuit breaker with a tiny 20ms cooldown
+    tripCircuitBreaker("TEST_COOLDOWN_RECOVERY", 20);
+    assert.equal(getCircuitBreakerStatus().isOpen, true);
+
+    // Wait for the 20ms cooldown to expire
+    await new Promise((resolve) => setTimeout(resolve, 35));
+    assert.equal(getCircuitBreakerStatus().isOpen, false);
+
+    const modelCalls = [];
+    const mockAi = {
+      models: {
+        generateContent: async ({ model }) => {
+          modelCalls.push(model);
+          return { text: "Primary recovered successfully" };
+        },
+      },
+    };
+    setClient(mockAi);
+
+    const meta = {};
+    const reply = await generateReply({
+      message: "Testing recovery after cooldown",
+      mode: "public",
+      requestId: "test-recovery-success",
+      metadataOut: meta,
+      backoffBaseMs: 5,
+    });
+
+    assert.equal(reply, "Primary recovered successfully");
+    assert.deepEqual(modelCalls, [primaryModelName]);
+    assert.equal(meta.selectedModel, primaryModelName);
+    assert.equal(meta.isFallback, false);
+    assert.equal(meta.circuitBreakerEngaged, false);
+    assert.equal(getCircuitBreakerStatus().isOpen, false);
   });
 });
